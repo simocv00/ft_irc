@@ -1,4 +1,4 @@
-#include "include/Channel.hpp"
+#include "Channel.hpp"
 
 const std::string &Channel::getName() const
 {
