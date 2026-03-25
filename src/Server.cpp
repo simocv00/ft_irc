@@ -2,6 +2,7 @@
 
 
 static Server* g_server = NULL;
+bool g_client_disconnected = false;
 static void signalHandler(int sig)
 {
     (void)sig;
@@ -55,11 +56,15 @@ void Server::run()
         }
         for (size_t i = 1; i < this->_pollfds.size(); i++)
         {
+            g_client_disconnected = false;
             if(this->_pollfds[i].revents & POLLIN){
                 _readClient(this->_pollfds[i].fd);
             }
             else if (this->_pollfds[i].revents & (POLLHUP | POLLERR | POLLNVAL)){
                 _disconnectClient(this->_pollfds[i].fd);
+            }
+            if (g_client_disconnected) {
+                i--;
             }
         }
         
@@ -100,11 +105,18 @@ void Server::_readClient(int fd)
     }
     Client *client = this->_clients[fd];
     client->setReadBuf(client->getReadBuf() + buffer);
+    
+    if (client->getReadBuf().length() > 4096) {
+        _disconnectClient(fd);
+        return;
+    }
+    
     _processMessages(client);
 }
 
 void Server::_disconnectClient(int fd)
 {
+    g_client_disconnected = true;
     close(fd);
     for (std::vector<pollfd>::iterator it = _pollfds.begin(); it != _pollfds.end(); ++it)
     {
@@ -117,9 +129,25 @@ void Server::_disconnectClient(int fd)
     std::map<int, Client*>::iterator it = this->_clients.find(fd);
     if (it != this->_clients.end())
     {
+        Client* client = it->second;
+        
+        std::map<std::string, Channel*> channelsCopy = _channels;
+        for (std::map<std::string, Channel*>::iterator cIt = channelsCopy.begin(); cIt != channelsCopy.end(); ++cIt) {
+            Channel* c = cIt->second;
+            if (c->hasClient(client)) {
+                c->broadcast(":" + client->getPrefix() + " QUIT :Client disconnected", client);
+                c->removeClient(client);
+                c->removeOperator(client);
+                if (c->clientCount() == 0) {
+                    delete c;
+                    _channels.erase(cIt->first);
+                }
+            }
+        }
+        
         std::cout << "Client disconnected !"
-         " IP: " << it->second->getHostname() << std::endl;
-        delete it->second;
+         " IP: " << client->getHostname() << std::endl;
+        delete client;
         this->_clients.erase(it);
     }
 }
@@ -139,6 +167,9 @@ void Server::_processMessages(Client *client)
 
         if (!line.empty()) {
             _handleCommand(client, line);
+            if (g_client_disconnected) {
+                break;
+            }
         }
     }
 }
@@ -210,7 +241,7 @@ void Server::_handleCommand(Client *client, const std::string &line)
     if (cmd == "CAP") {
         if (args.size() > 1 && args[1] == "LS") {
             std::string capMsg = ":ft_irc CAP * LS :\r\n";
-            send(client->getFd(), capMsg.c_str(), capMsg.length(), 0);
+            send(client->getFd(), capMsg.c_str(), capMsg.length(), MSG_NOSIGNAL);
         }
         return;
     }
@@ -267,7 +298,7 @@ void Server::_sendReply(Client *client, int code, const std::string &msg) const
         ss << client->getNickname() << " ";
     ss << msg << "\r\n";
     std::string final_msg = ss.str();
-    send(client->getFd(), final_msg.c_str(), final_msg.length(), 0);
+    send(client->getFd(), final_msg.c_str(), final_msg.length(), MSG_NOSIGNAL);
 }
  void Server::_checkRegistration(Client *client)
  {
@@ -717,7 +748,9 @@ void Server::_cmdMode(Client *client, const std::vector<std::string> &args)
                 else {
                     _sendReply(client, 461, "MODE +l :Not enough parameters");
                 }
-            } else {
+            } 
+            else
+            {
                 targetChannel->unsetMode('l');
                 if (lastSign != '-') { appliedModes += "-"; lastSign = '-'; }
                 appliedModes += c;
@@ -769,10 +802,10 @@ void Server::_cmdQuit(Client *client, const std::vector<std::string> &args)
         Channel* c = it->second;
         
         if (c->hasClient(client)) {
-            c->broadcast(":" + client->getPrefix() + " QUIT :" + message); 
+            c->broadcast(":" + client->getPrefix() + " QUIT :" + message, client); 
             c->removeClient(client);
             c->removeOperator(client);
-                        if (c->clientCount() == 0) {
+            if (c->clientCount() == 0) {
                 delete c;
                 _channels.erase(it->first);
             }
@@ -787,7 +820,7 @@ void Server::cleaning()
     {
         Client *client = it->second;
         std::string msg = "ERROR :Server shutting down\r\n";
-        send(client->getFd(), msg.c_str(), msg.length(), 0);
+        send(client->getFd(), msg.c_str(), msg.length(), MSG_NOSIGNAL);
         close(client->getFd());
         delete client;
     }
@@ -818,7 +851,7 @@ void Server::_cmdPing(Client *client, const std::vector<std::string> &args)
         return;
     }
     std::string pongMsg = ":" + std::string("ft_irc") + " PONG " + std::string("ft_irc") + " :" + args[1] + "\r\n";
-    send(client->getFd(), pongMsg.c_str(), pongMsg.length(), 0);
+    send(client->getFd(), pongMsg.c_str(), pongMsg.length(), MSG_NOSIGNAL);
 }
 
 bool Server::_isValidNickname(const std::string &nick) {

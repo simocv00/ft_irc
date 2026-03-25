@@ -2,7 +2,7 @@
 
 Client::Client(int fd, const std::string &hostname)
     : _fd(fd),
-      _nickname("*"),
+      _nickname(""),
       _username(""),
       _hostname(hostname),
       _realname(""),
