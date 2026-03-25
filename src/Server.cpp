@@ -718,13 +718,14 @@ void Server::_cmdMode(Client *client, const std::vector<std::string> &args)
             if (adding == true) {
                 if (argIndex < args.size()) {
                     targetChannel->setKey(args[argIndex]);
+                    targetChannel->setMode(c);
                     if (lastSign != '+') { appliedModes += "+"; lastSign = '+'; }
                     appliedModes += c;
                     appliedArgs += " " + args[argIndex];
                     argIndex++;
                 }
                 else {
-                    _sendReply(client, 461, "MODE +k :Not enough parameters");
+                    _sendReply(client, 461, "MODE :Not enough parameters : +k");
                 }
             } else {
                 targetChannel->unsetMode('k');
@@ -739,6 +740,7 @@ void Server::_cmdMode(Client *client, const std::vector<std::string> &args)
                     int limit = atoi(args[argIndex].c_str());
                     if (limit > 0) {
                         targetChannel->setUserLimit(limit);
+                        targetChannel->setMode(c);
                         if (lastSign != '+') { appliedModes += "+"; lastSign = '+'; }
                         appliedModes += c;
                         appliedArgs += " " + args[argIndex];
@@ -746,7 +748,7 @@ void Server::_cmdMode(Client *client, const std::vector<std::string> &args)
                     argIndex++;
                 }
                 else {
-                    _sendReply(client, 461, "MODE +l :Not enough parameters");
+                    _sendReply(client, 461, "MODE :Not enough parameters : +l");
                 }
             } 
             else
@@ -777,7 +779,7 @@ void Server::_cmdMode(Client *client, const std::vector<std::string> &args)
                 argIndex++;
             }
             else {
-                _sendReply(client, 461, "MODE +o :Not enough parameters");
+                _sendReply(client, 461, "MODE :Not enough parameters : +o");
             }
         }
         else {
