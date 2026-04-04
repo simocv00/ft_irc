@@ -134,7 +134,7 @@ You can connect to the server using any standard IRC Client (like `Irssi`, `WeeC
 
 *Using netcat:*
 ```bash
-nc localhost 6667
+nc -C localhost 6667
 PASS mypassword
 NICK mynick
 USER myuser 0 * :Real Name
