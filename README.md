@@ -101,6 +101,21 @@ The server implements a substantial subset of the IRC protocol specifications (R
 *   **Messaging:** `PRIVMSG` (Supports both Channel and Direct Messaging)
 *   **Channel Management:** `KICK`, `INVITE`, `MODE`
 
+## 🤖 Internal Server Bot (`47bot`)
+
+The server features an integrated, stateless chatbot named **`47bot`**. By utilizing a nickname convention that is otherwise disallowed for standard users by RFC networking rules (nicknames starting with a digit), the `47bot` remains secured against user impersonation. 
+
+You can interact with `47bot` continuously inside channels.
+
+### Supported Bot Commands
+
+*   `!logtimer` : Calculates and responds with the exact duration the user has been connected to the IRC server. Returns grammatically formatted time sequences (e.g., `1 day, 2 hours, 1 minute and 4 seconds`).
+
+**Usage inside any Channel:**
+```text
+PRIVMSG #general :!logtimer
+```
+
 ## ⚙️ Channel Modes Supported
 
 The `MODE` command supports the following flags for channels:
@@ -134,9 +149,9 @@ You can connect to the server using any standard IRC Client (like `Irssi`, `WeeC
 
 *Using netcat:*
 ```bash
-nc -C localhost 6667
-PASS mypassword
-NICK mynick
-USER myuser 0 * :Real Name
+nc -C localhost port
+PASS password
+NICK nick
+USER user 0 * :Real Name
 ```
 
