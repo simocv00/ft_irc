@@ -872,7 +872,7 @@ bool Server::_isValidNickname(const std::string &nick) {
     return true;
 }
 bool Server::_isValidChannelName(const std::string &name) {
-    if (name.empty() || name.length() > 50 || name[0] != '#') {
+    if (name.empty() || name.length() > 50 || name[0] != '#' || name.length() <= 1) {
         return false;
     }
         for (size_t i = 0; i < name.length(); i++) {
