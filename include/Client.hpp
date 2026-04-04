@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <netinet/in.h>
+#include <ctime>
 
 class Channel;
 
@@ -17,6 +18,7 @@ private:
     bool        _registered;
     bool        _operator;
     std::string _readBuf;
+    std::time_t _connectionTime;
     Client(const Client&);
     Client& operator=(const Client&);
 public:
@@ -30,6 +32,7 @@ public:
     bool          getPassword()   const;
     bool                        isRegistered()  const;
     bool                        isOperator()    const;
+    std::time_t                 getConnectionTime() const;
     const std::string&          getReadBuf()    const;
     void    setNickname(const std::string &nickname);
     void    setUsername(const std::string &username);

@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <ctime>
 #include <poll.h>
 #include "Channel.hpp"
 #include "Client.hpp"
@@ -22,6 +23,7 @@
 #include <exception>
 #include <iomanip>
 #include "Channel.hpp"
+
 #define SERVER_NAME     "ft_irc"
 
 class Server
@@ -55,6 +57,7 @@ private:
     void    _cmdJoin(Client *client, const std::vector<std::string> &args);
     void    _cmdPart(Client *client, const std::vector<std::string> &args);
     void    _cmdPrivmsg(Client *client, const std::vector<std::string> &args);
+    void    _handleBotCommand(Client *client, const std::vector<std::string> &args);
     void    _cmdKick(Client *client, const std::vector<std::string> &args);
     void    _cmdInvite(Client *client, const std::vector<std::string> &args);
     void    _cmdTopic(Client *client, const std::vector<std::string> &args);

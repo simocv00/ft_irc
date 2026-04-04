@@ -9,7 +9,8 @@ Client::Client(int fd, const std::string &hostname)
       _password(false),
       _registered(false),
       _operator(false),
-      _readBuf("")
+      _readBuf(""),
+      _connectionTime(std::time(NULL))
 {}
 Client::~Client() {}
 int                     Client::getFd()       const { return _fd; }
@@ -21,6 +22,7 @@ bool      Client::getPassword() const { return _password; }
 bool                    Client::isRegistered()const { return _registered; }
 bool                    Client::isOperator()  const { return _operator; }
 const std::string&      Client::getReadBuf()  const { return _readBuf; }
+std::time_t             Client::getConnectionTime() const { return _connectionTime; }
 void    Client::setNickname(const std::string &nickname) { _nickname = nickname; }
 void    Client::setUsername(const std::string &username) { _username = username; }
 void    Client::setRealname(const std::string &realname) { _realname = realname; }

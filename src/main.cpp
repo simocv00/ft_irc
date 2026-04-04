@@ -1,6 +1,4 @@
 #include "Server.hpp"
-#include <iostream>
-#include <cstdlib>
 
 int main(int argc, char **argv)
 {
@@ -9,6 +7,8 @@ int main(int argc, char **argv)
         std::cerr << "Usage: ./ircserv <port> <password>" << std::endl;
         return 1;
     }
+
+    std::srand(std::time(NULL));
 
     int port = std::atoi(argv[1]);
     std::string password = argv[2];

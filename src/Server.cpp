@@ -473,8 +473,12 @@ void Server::_cmdPrivmsg(Client *client, const std::vector<std::string> &args)
         if(_channels.find(args[1]) != _channels.end())
         {
             Channel* c = _channels[args[1]];
-            if(c->hasClient(client)){
+            if(c->hasClient(client)) {
                 c->broadcast(fullMessage, client);
+                if (args[2] == "!logtimer")
+                {
+                    _handleBotCommand(client, args);
+                }
                 return;
             }
             else
@@ -882,4 +886,68 @@ bool Server::_isValidChannelName(const std::string &name) {
     }
     
     return true;
+}
+
+void Server::_handleBotCommand(Client *client, const std::vector<std::string> &args)
+{
+    std::string response;
+    
+    std::string target = args[1];
+
+    std::string botPrefix = ":47bot!bot@localhost PRIVMSG " + target;
+    if (args.size() > 2 && args[2] == "!logtimer") {
+        std::time_t now = std::time(NULL);
+        double diff = std::difftime(now, client->getConnectionTime());
+        long totalSeconds = static_cast<long>(diff);
+        if (totalSeconds < 0)
+            totalSeconds = 0;
+
+        long days = totalSeconds / 86400;
+        totalSeconds %= 86400;
+        long hours = totalSeconds / 3600;
+        totalSeconds %= 3600;
+        long minutes = totalSeconds / 60;
+        long seconds = totalSeconds % 60;
+
+        std::vector<std::string> parts;
+        if (days > 0) {
+            std::stringstream ssDays;
+            ssDays << days << (days == 1 ? " day" : " days");
+            parts.push_back(ssDays.str());
+        }
+        if (hours > 0) {
+            std::stringstream ssHours;
+            ssHours << hours << (hours == 1 ? " hour" : " hours");
+            parts.push_back(ssHours.str());
+        }
+        if (minutes > 0) {
+            std::stringstream ssMins;
+            ssMins << minutes << (minutes == 1 ? " minute" : " minutes");
+            parts.push_back(ssMins.str());
+        }
+        if (seconds > 0 || parts.empty()) {
+            std::stringstream ssSecs;
+            ssSecs << seconds << (seconds == 1 ? " second" : " seconds");
+            parts.push_back(ssSecs.str());
+        }
+
+        std::stringstream timeStr;
+        for (size_t i = 0; i < parts.size(); ++i) {
+            if (i > 0) {
+                if (i == parts.size() - 1)
+                    timeStr << " and ";
+                else
+                    timeStr << ", ";
+            }
+            timeStr << parts[i];
+        }
+
+        std::stringstream ss;
+        ss << botPrefix << " :You have been connected for " << timeStr.str();
+        response = ss.str();
+    }
+    
+    if (_channels.find(args[1]) != _channels.end()) {
+        _channels[args[1]]->broadcast(response);
+    }
 }
