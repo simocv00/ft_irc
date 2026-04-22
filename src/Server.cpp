@@ -16,6 +16,12 @@ void Server::start(void)
     if(this->_serverFd < 0){
         throw std::runtime_error(strerror(errno));
     }
+    if (fcntl(this->_serverFd, F_SETFL, O_NONBLOCK) < 0) {
+        std::cerr << "Error: fcntl failed for client." << std::endl;
+        close(this->_serverFd);
+        this->_serverFd = -1;
+        return;
+    }
     int reuse = 1;
     if (setsockopt(this->_serverFd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0) {
         close(this->_serverFd);
@@ -649,7 +655,7 @@ void Server::_cmdInvite(Client *client, const std::vector<std::string> &args)
         return;
     }
 
-    if(c->hasMode('t')) {
+    if(c->hasMode('i')) {
         if(!c->isOperator(client)) {
             _sendReply(client, 482, channelName + " :You're not channel operator");
             return;
